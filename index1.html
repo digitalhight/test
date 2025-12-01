@@ -1,0 +1,273 @@
+import React from 'react';
+import { Brain, Zap, Globe, Target, TrendingUp, Users, ChevronDown, Menu, X } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const App = () => {
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  
+  const features = [
+    {
+      icon: <Brain className="w-8 h-8" />,
+      title: "Intelligence Artificielle Avancée",
+      description: "Solutions IA de pointe pour transformer votre entreprise et optimiser vos processus."
+    },
+    {
+      icon: <Zap className="w-8 h-8" />,
+      title: "Traitement Ultra-Rapide",
+      description: "Analyse de données en temps réel avec des performances exceptionnelles et une latence minimale."
+    },
+    {
+      icon: <Globe className="w-8 h-8" />,
+      title: "Déploiement Global",
+      description: "Infrastructure cloud sécurisée accessible depuis n'importe où dans le monde."
+    },
+    {
+      icon: <Target className="w-8 h-8" />,
+      title: "Personnalisation Totale",
+      description: "Solutions sur mesure adaptées à vos besoins spécifiques et objectifs commerciaux."
+    }
+  ];
+
+  const stats = [
+    { value: "99.9%", label: "Disponibilité" },
+    { value: "24/7", label: "Support Technique" },
+    { value: "500+", label: "Clients Satisfaits" },
+    { value: "10x", label: "ROI Moyen" }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white overflow-x-hidden">
+      {/* Navigation */}
+      <nav className="relative z-50 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center space-x-2"
+          >
+            <div className="w-10 h-10 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-lg flex items-center justify-center">
+              <Brain className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+              AI AGENCE
+            </span>
+          </motion.div>
+          
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center space-x-8">
+            {['Accueil', 'Solutions', 'Technologie', 'Clients', 'Contact'].map((item, index) => (
+              <motion.a
+                key={item}
+                href="#"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="text-gray-300 hover:text-cyan-400 transition-colors duration-300 font-medium"
+              >
+                {item}
+              </motion.a>
+            ))}
+            <motion.button
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 px-6 py-2 rounded-full font-semibold transition-all duration-300 transform hover:scale-105"
+            >
+              Commencer
+            </motion.button>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button 
+            className="md:hidden text-gray-300"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="md:hidden mt-4 bg-slate-800/90 backdrop-blur-lg rounded-xl p-4 absolute top-full left-6 right-6"
+          >
+            <div className="flex flex-col space-y-4">
+              {['Accueil', 'Solutions', 'Technologie', 'Clients', 'Contact'].map((item) => (
+                <a key={item} href="#" className="text-gray-300 hover:text-cyan-400 transition-colors duration-300 font-medium py-2">
+                  {item}
+                </a>
+              ))}
+              <button className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 px-6 py-2 rounded-full font-semibold transition-all duration-300">
+                Commencer
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative px-6 py-20">
+        <div className="max-w-7xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+              L'avenir de l'<span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">IA</span> commence ici
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
+              Transformez votre entreprise avec des solutions d'intelligence artificielle de pointe, 
+              conçues pour l'ère numérique et l'innovation continue.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300"
+              >
+                Découvrir nos solutions
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="border-2 border-cyan-400/50 hover:border-cyan-400 px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300"
+              >
+                Voir la démo
+              </motion.button>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Floating Elements */}
+        <div className="absolute top-1/4 left-10 w-20 h-20 bg-cyan-500/20 rounded-full blur-xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-20 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl animate-pulse"></div>
+        <div className="absolute top-1/3 right-1/4 w-16 h-16 bg-pink-500/20 rounded-full blur-xl animate-pulse"></div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="px-6 py-12">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="text-center"
+              >
+                <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent mb-2">
+                  {stat.value}
+                </div>
+                <div className="text-gray-400">{stat.label}</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="px-6 py-20">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Nos <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">solutions</span> innovantes
+            </h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Des technologies de pointe conçues pour propulser votre entreprise vers de nouveaux sommets
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-slate-800/50 backdrop-blur-sm p-6 rounded-2xl border border-slate-700 hover:border-cyan-500/50 transition-all duration-300 hover:transform hover:scale-105"
+              >
+                <div className="w-14 h-14 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-xl flex items-center justify-center mb-6">
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-semibold mb-4">{feature.title}</h3>
+                <p className="text-gray-400 leading-relaxed">{feature.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="px-6 py-20">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Prêt à transformer votre entreprise avec l'IA ?
+            </h2>
+            <p className="text-xl text-gray-300 mb-12">
+              Rejoignez des centaines d'entreprises qui révolutionnent leur secteur grâce à nos solutions d'intelligence artificielle.
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 px-12 py-4 rounded-full font-semibold text-lg transition-all duration-300 text-lg"
+            >
+              Commencer votre transformation
+            </motion.button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="px-6 py-12 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center space-x-2 mb-6 md:mb-0">
+              <div className="w-8 h-8 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-lg flex items-center justify-center">
+                <Brain className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xl font-bold">AI AGENCE</span>
+            </div>
+            <div className="text-gray-400 text-sm">
+              © 2025 AI AGENCE. Tous droits réservés.
+            </div>
+            <div className="flex space-x-6 mt-6 md:mt-0">
+              {['Conditions', 'Confidentialité', 'Contact'].map((item) => (
+                <a key={item} href="#" className="text-gray-400 hover:text-cyan-400 transition-colors duration-300 text-sm">
+                  {item}
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* Scroll Indicator */}
+      <motion.div
+        initial={{ opacity: 1 }}
+        animate={{ opacity: [1, 0.7, 1] }}
+        transition={{ repeat: Infinity, duration: 2 }}
+        className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+      >
+        <ChevronDown className="w-6 h-6 text-cyan-400" />
+      </motion.div>
+    </div>
+  );
+};
+
+export default App;
