@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Calculateur de coût Gemini — App interactive</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa7bf;--accent:#6ee7b7;--glass:rgba(255,255,255,0.03)}
+    *{box-sizing:border-box;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial}
+    body{margin:0;background:linear-gradient(180deg,#071024 0%, #071428 60%);color:#e6eef8;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
+    .app{width:100%;max-width:1100px}
+    header{display:flex;gap:16px;align-items:center;margin-bottom:18px}
+    header h1{font-size:20px;margin:0}
+    .grid{display:grid;grid-template-columns:360px 1fr;gap:18px}
+    .card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03)}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    select,input[type=number],input[type=text]{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:var(--glass);color:inherit;font-size:14px}
+    .row{display:flex;gap:10px}
+    .row > *{flex:1}
+    .muted{color:var(--muted);font-size:13px}
+    button{background:linear-gradient(90deg,#0ea5a1,#7dd3fc);border:none;padding:10px 12px;border-radius:10px;color:#042331;font-weight:700;cursor:pointer}
+    .result{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+    .stat{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:8px}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:8px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.03);font-size:13px}
+    .small{font-size:13px;color:var(--muted)}
+    footer{margin-top:14px;color:var(--muted);font-size:13px}
+    .top-actions{display:flex;gap:8px}
+    @media(max-width:880px){.grid{grid-template-columns:1fr}.result{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>Calculateur interactif de coûts API — Gemini & LLM (Demo)</h1>
+        <div class="small">Choisis un modèle, ajuste les tokens et la consommation. Le tableau calcule le coût par utilisateur, marge, et prix recommandés.</div>
+      </div>
+      <div style="margin-left:auto" class="top-actions">
+        <button id="exportCsv">Exporter CSV</button>
+        <button id="resetBtn" style="background:transparent;color:var(--accent);border:1px solid rgba(255,255,255,0.06)">Réinitialiser</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Left column : Controls -->
+      <div class="card">
+        <h3 style="margin:0 0 8px 0">Configuration modèle</h3>
+        <label>Choisir un modèle (classe LLM)</label>
+        <select id="modelSelect"></select>
+        <div style="height:10px"></div>
+
+        <label>Tokens input moyen par requête</label>
+        <input id="tokensIn" type="number" min="0" value="200">
+
+        <label>Tokens output moyen par requête</label>
+        <input id="tokensOut" type="number" min="0" value="400">
+
+        <label>Requêtes par mois / utilisateur</label>
+        <input id="reqPerMonth" type="number" min="1" value="150">
+
+        <label>Nombre d'utilisateurs (simulateur)</label>
+        <input id="usersCount" type="number" min="1" value="1000">
+
+        <label>Multiplicateur de marge (x)</label>
+        <input id="marginMultiplier" type="number" min="1" value="15">
+
+        <div style="height:10px"></div>
+        <button id="applyBtn">Calculer</button>
+
+        <hr style="border:none;height:1px;background:rgba(255,255,255,0.03);margin:12px 0">
+        <h4 style="margin:0 0 6px 0">Editer / Ajouter modèle</h4>
+        <label>Nom du modèle</label>
+        <input id="editName" type="text" placeholder="Nom exemple: Gemini Flash Lite">
+        <label>Prix input ($ / million tokens)</label>
+        <input id="editInPrice" type="number" step="0.0001" value="0.10">
+        <label>Prix output ($ / million tokens)</label>
+        <input id="editOutPrice" type="number" step="0.0001" value="0.30">
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button id="addModel">Ajouter / Mettre à jour</button>
+          <button id="delModel" style="background:transparent;color:var(--accent);border:1px solid rgba(255,255,255,0.06)">Supprimer</button>
+        </div>
+
+      </div>
+
+      <!-- Right column : Results -->
+      <div>
+        <div class="card">
+          <h3 style="margin:0 0 10px 0">Résumé & Résultats</h3>
+
+          <div class="result">
+            <div class="stat">
+              <div class="small">Coût API / utilisateur / mois</div>
+              <div style="font-size:18px;font-weight:700" id="costPerUser">$0.0126</div>
+              <div class="muted">(input + output)</div>
+            </div>
+            <div class="stat">
+              <div class="small">Coût serveur total / mois (simulé)</div>
+              <div style="font-size:18px;font-weight:700" id="costTotal">$12.60</div>
+              <div class="muted">pour <span id="simUsers">1000</span> utilisateurs</div>
+            </div>
+            <div class="stat">
+              <div class="small">Prix recommandé (multiplicateur)</div>
+              <div style="font-size:18px;font-weight:700" id="priceRec">$0.19</div>
+              <div class="muted">x <span id="multVal">15</span></div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <label>Propositions d'abonnements (automatique)</label>
+            <table id="plansTable">
+              <thead><tr><th>Plan</th><th>Requêtes/mo</th><th>Prix conseillé</th><th>Coût API/mo</th><th>Marge</th></tr></thead>
+              <tbody>
+                <!-- Rows go here -->
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <h3 style="margin:0 0 8px 0">Détail des calculs</h3>
+          <table>
+            <tbody>
+              <tr><th>Modèle</th><td id="detailModel">Flash</td></tr>
+              <tr><th>Prix input ($/M)</th><td id="detailIn">0.10</td></tr>
+              <tr><th>Prix output ($/M)</th><td id="detailOut">0.30</td></tr>
+              <tr><th>Tokens / requête</th><td id="detailTokens">in 200 — out 400</td></tr>
+              <tr><th>Requêtes / mois / user</th><td id="detailReq">150</td></tr>
+              <tr><th>Coût par user / mois</th><td id="detailCostUser">$0.0126</td></tr>
+              <tr><th>Coût total (simulé)</th><td id="detailCostTotal">$12.60</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <footer class="card" style="margin-top:12px">
+          <div class="small">Astuce pro : garde toujours un plan payant avec limitation de requêtes et une option d'overage facturée à l'utilisation. Tu peux aussi mettre un cache côté serveur pour réduire les tokens effectifs.</div>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Données initiales — 10 classes LLM fictives / réalistes
+    const DEFAULT_MODELS = [
+      {id:'flash-lite',name:'Gemini Flash Lite',in:0.05,out:0.15},
+      {id:'flash',name:'Gemini Flash',in:0.10,out:0.30},
+      {id:'flash-xl',name:'Gemini Flash XL',in:0.18,out:0.55},
+      {id:'pro',name:'Gemini Pro',in:0.50,out:1.50},
+      {id:'pro-xl',name:'Gemini Pro XL',in:1.20,out:3.50},
+      {id:'ultra',name:'Gemini Ultra',in:3.00,out:10.00},
+      {id:'cheap-a',name:'BudgetLM Small',in:0.02,out:0.06},
+      {id:'cheap-b',name:'CheapAlpha',in:0.03,out:0.09},
+      {id:'mini',name:'MiniLM Class',in:0.08,out:0.22},
+      {id:'nano',name:'NanoLM',in:0.015,out:0.045}
+    ];
+
+    // Utilities
+    const $ = id => document.getElementById(id);
+    const format = v => (Math.round(v*100000)/100000).toLocaleString(undefined,{minimumFractionDigits:5,maximumFractionDigits:5});
+    const money = v => (Math.round(v*100000)/100000).toLocaleString(undefined,{minimumFractionDigits:5,maximumFractionDigits:5});
+
+    // state
+    let models = JSON.parse(localStorage.getItem('models_v1')) || DEFAULT_MODELS.slice();
+
+    function populateModels(){
+      const sel = $('modelSelect'); sel.innerHTML='';
+      models.forEach(m=>{
+        const opt = document.createElement('option'); opt.value=m.id; opt.textContent=`${m.name} — in $${m.in}/M · out $${m.out}/M`; sel.appendChild(opt);
+      });
+    }
+
+    function findModel(id){return models.find(m=>m.id===id)}
+
+    function applyCalc(){
+      const sel = $('modelSelect');
+      const mod = findModel(sel.value) || models[0];
+      const tokensIn = Number($('tokensIn').value)||0;
+      const tokensOut = Number($('tokensOut').value)||0;
+      const reqPerMonth = Number($('reqPerMonth').value)||1;
+      const usersCount = Number($('usersCount').value)||1;
+      const mult = Number($('marginMultiplier').value)||10;
+
+      // conversions
+      const millionsIn = (tokensIn * reqPerMonth) / 1_000_000;
+      const millionsOut = (tokensOut * reqPerMonth) / 1_000_000;
+      const costIn = millionsIn * mod.in;
+      const costOut = millionsOut * mod.out;
+      const costPerUser = costIn + costOut;
+      const costTotal = costPerUser * usersCount;
+      const recommendedPrice = costPerUser * mult;
+
+      // fill UI
+      $('costPerUser').textContent = `$${costPerUser.toFixed(6)}`;
+      $('costTotal').textContent = `$${costTotal.toFixed(2)}`;
+      $('priceRec').textContent = `$${recommendedPrice.toFixed(4)}`;
+      $('multVal').textContent = mult;
+      $('simUsers').textContent = usersCount;
+
+      // detail
+      $('detailModel').textContent = mod.name;
+      $('detailIn').textContent = mod.in.toFixed(5);
+      $('detailOut').textContent = mod.out.toFixed(5);
+      $('detailTokens').textContent = `in ${tokensIn} — out ${tokensOut}`;
+      $('detailReq').textContent = reqPerMonth;
+      $('detailCostUser').textContent = `$${costPerUser.toFixed(6)}`;
+      $('detailCostTotal').textContent = `$${costTotal.toFixed(2)}`;
+
+      // plans automatic
+      const plans = [
+        {name:'Starter',req:Math.round(reqPerMonth*0.5)},
+        {name:'Basic',req:reqPerMonth},
+        {name:'Pro',req:reqPerMonth*4},
+        {name:'Business',req:reqPerMonth*40}
+      ];
+      const tbody = $('plansTable').querySelector('tbody'); tbody.innerHTML='';
+      plans.forEach(p=>{
+        const millionsIn_p = (tokensIn * p.req)/1_000_000;
+        const millionsOut_p = (tokensOut * p.req)/1_000_000;
+        const costAPI = millionsIn_p*mod.in + millionsOut_p*mod.out;
+        const priceSuggested = costAPI * mult;
+        const margin = priceSuggested - costAPI;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${p.name}</td><td>${p.req}</td><td>$${priceSuggested.toFixed(4)}</td><td>$${costAPI.toFixed(6)}</td><td>$${margin.toFixed(6)}</td>`;
+        tbody.appendChild(tr);
+      });
+
+      // save last selection
+      localStorage.setItem('lastCalc', JSON.stringify({model:mod.id,tokensIn,tokensOut,reqPerMonth,usersCount,mult}));
+    }
+
+    // model editing
+    function addOrUpdateModel(){
+      const name = $('editName').value.trim();
+      const inP = Number($('editInPrice').value)||0;
+      const outP = Number($('editOutPrice').value)||0;
+      if(!name) return alert('Nom requis');
+      const id = name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+      const existing = findModel(id);
+      if(existing){ existing.name=name; existing.in=inP; existing.out=outP; }
+      else models.push({id,name,in:inP,out:outP});
+      localStorage.setItem('models_v1', JSON.stringify(models));
+      populateModels();
+      $('editName').value='';
+      alert('Modèle ajouté / mis à jour');
+    }
+
+    function delModel(){
+      const sel = $('modelSelect');
+      const id = sel.value;
+      if(!confirm('Supprimer le modèle sélectionné ?')) return;
+      models = models.filter(m=>m.id!==id);
+      localStorage.setItem('models_v1', JSON.stringify(models));
+      populateModels();
+      applyCalc();
+    }
+
+    function exportCsv(){
+      // export current calculations and plans
+      const rows = [];
+      const last = JSON.parse(localStorage.getItem('lastCalc')||'{}');
+      rows.push(['Clé','Valeur']);
+      rows.push(['Modèle', last.model || $('modelSelect').value]);
+      rows.push(['Tokens in', $('tokensIn').value]);
+      rows.push(['Tokens out', $('tokensOut').value]);
+      rows.push(['Req/month/user', $('reqPerMonth').value]);
+      rows.push(['Users', $('usersCount').value]);
+      rows.push(['Multiplicateur', $('marginMultiplier').value]);
+
+      const table = document.querySelector('#plansTable');
+      rows.push([]);
+      rows.push(['Plan','Requêtes/mo','Prix conseillé','Coût API/mo','Marge']);
+      Array.from(table.querySelectorAll('tbody tr')).forEach(tr=>{
+        const cols = Array.from(tr.querySelectorAll('td')).map(td=>td.textContent);
+        rows.push(cols);
+      });
+
+      const csv = rows.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download='calculateur_gemini_plans.csv'; document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    function resetAll(){
+      if(!confirm('Réinitialiser les modèles et les valeurs ?')) return;
+      localStorage.removeItem('models_v1');
+      models = DEFAULT_MODELS.slice();
+      populateModels();
+      loadLast();
+    }
+
+    function loadLast(){
+      populateModels();
+      const last = JSON.parse(localStorage.getItem('lastCalc')||'{}');
+      if(last.model) $('modelSelect').value = last.model;
+      if(last.tokensIn) $('tokensIn').value = last.tokensIn;
+      if(last.tokensOut) $('tokensOut').value = last.tokensOut;
+      if(last.reqPerMonth) $('reqPerMonth').value = last.reqPerMonth;
+      if(last.usersCount) $('usersCount').value = last.usersCount;
+      if(last.mult) $('marginMultiplier').value = last.mult;
+      applyCalc();
+    }
+
+    // Events
+    document.addEventListener('DOMContentLoaded', ()=>{
+      populateModels();
+      loadLast();
+      $('applyBtn').addEventListener('click', applyCalc);
+      $('addModel').addEventListener('click', addOrUpdateModel);
+      $('delModel').addEventListener('click', delModel);
+      $('exportCsv').addEventListener('click', exportCsv);
+      $('resetBtn').addEventListener('click', resetAll);
+    });
+  </script>
+</body>
+</html>
